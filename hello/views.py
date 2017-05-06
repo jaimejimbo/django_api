@@ -29,6 +29,10 @@ def prueba(request):
 	return render(request, 'prueba.html')
 
 def apijson(request):
+    """
+    :param request: peticion http
+    :return: json con datos
+    """
     uid = request.GET['uid']
     busq = request.GET['busq']
     pattern = request.GET['pattern']
@@ -36,10 +40,13 @@ def apijson(request):
     threads = []
     q1 = queue.Queue()
     def wrapper(target, que, pattern):
-        page = wk.page(target)
-        text = page.content
-        reg = re.compile(pattern)
-        que.put([len(reg.findall(text)), target, pattern])
+        try:
+            page = wk.page(target)
+            text = page.content
+            reg = re.compile(pattern)
+            que.put([len(reg.findall(text)), target, pattern])
+        except wk.exceptions.DisambiguationError as e:
+            que.put([-1, "ambiguous", "fail"])
     for target in targets:
         thread = th.Thread(target=wrapper, args=(target, q1, pattern))
         threads.append(thread)
@@ -63,6 +70,11 @@ def apijson(request):
 
 
 def api(request):
+    """
+    Esta API esta ideada para devolver graficos, pero aun no esta implementada.
+    :param request: peticion http
+    :return: vista
+    """
     uid = request.GET['uid']
     busq = request.GET['busq']
     pattern = request.GET['pattern']
@@ -70,10 +82,13 @@ def api(request):
     threads = []
     q1 = queue.Queue()
     def wrapper(target, que, pattern):
-        page = wk.page(target)
-        text = page.content
-        reg = re.compile(pattern)
-        que.put([len(reg.findall(text)), target, pattern])
+        try:
+            page = wk.page(target)
+            text = page.content
+            reg = re.compile(pattern)
+            que.put([len(reg.findall(text)), target, pattern])
+        except wk.exceptions.DisambiguationError as e:
+            que.put([-1, "ambiguous", "fail"])
     for target in targets:
         thread = th.Thread(target=wrapper, args=(target, q1, pattern))
         threads.append(thread)
