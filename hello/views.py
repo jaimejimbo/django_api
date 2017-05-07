@@ -101,7 +101,7 @@ def api(request):
             url = page.url
             content = ""
             num = 0
-            if local:
+            if (local=="true"):
                 content = page.content
                 num = 0
             else:
