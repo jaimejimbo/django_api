@@ -9,6 +9,7 @@ import threading as th
 import queue
 import re, json
 import scipy as sp
+import middleware.middleware as middle
 
 # Create your views here.
 def index(request):
@@ -43,31 +44,33 @@ def apijson(request):
         try:
             page = wk.page(target)
             text = page.content
-            reg = re.compile(pattern)
-            que.put([len(reg.findall(text)), target, pattern])
+            reg = re.compile(pattern, re.IGNORECASE)
+            url = page.url
+            que.put([len(reg.findall(text)), target, pattern, url])
         except wk.exceptions.DisambiguationError as e:
-            que.put([-1, "ambiguous", "fail"])
+            que.put([-1, "ambiguous", "fail", ""])
     for target in targets:
         thread = th.Thread(target=wrapper, args=(target, q1, pattern))
         threads.append(thread)
         thread.start()
     amounts = []
-    urls = []
     for thread in threads:
         thread.join()
         data = q1.get()
         amounts.append({
-            'url': data[1],
-            'amount': data[0]
+            'title': data[1],
+            'amount': data[0],
+            'pattern': data[2],
+            'url': data[3]
         })
-        urls.append(data[1])
     data = {
         "target": busq,
         "pattern": pattern,
         "reps": amounts
     }
-    return JsonResponse(data)
-
+    middleware = middle.XsSharing()
+    response = middleware.process_response(request, JsonResponse(data))
+    return response
 
 def api(request):
     """
@@ -86,27 +89,30 @@ def api(request):
             page = wk.page(target)
             text = page.content
             reg = re.compile(pattern)
-            que.put([len(reg.findall(text)), target, pattern])
+            url = page.url
+            que.put([len(reg.findall(text)), target, pattern, url])
         except wk.exceptions.DisambiguationError as e:
-            que.put([-1, "ambiguous", "fail"])
+            que.put([-1, "ambiguous", "fail", ""])
     for target in targets:
         thread = th.Thread(target=wrapper, args=(target, q1, pattern))
         threads.append(thread)
         thread.start()
     amounts = []
-    urls = []
     for thread in threads:
         thread.join()
         data = q1.get()
         amounts.append({
-            'url': data[1],
-            'amount': data[0]
+            'title': data[1],
+            'amount': data[0],
+            'pattern': data[2],
+            'url': data[3]
         })
-        urls.append(data[1])
     data = {
         "target": busq,
         "pattern": pattern,
         "reps": amounts
     }
-    return render(request, 'amounts.html', data)
+    middleware = middle.XsSharing()
+    response = middleware.process_response(request, render(request, 'amounts.html', data))
+    return response
 
