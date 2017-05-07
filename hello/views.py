@@ -37,6 +37,7 @@ def apijson(request):
     uid = request.GET['uid']
     busq = request.GET['busq']
     pattern = request.GET['pattern']
+    local = request.GET['local']
     targets = wk.search(busq)
     threads = []
     q1 = queue.Queue()
@@ -44,11 +45,18 @@ def apijson(request):
         try:
             page = wk.page(target)
             text = page.content
-            reg = re.compile(pattern, re.IGNORECASE)
             url = page.url
-            que.put([len(reg.findall(text)), target, pattern, url])
+            content = ""
+            num = 0
+            if local:
+                content = page.content
+                num = 0
+            else:
+                reg = re.compile(pattern, re.IGNORECASE)
+                num = len(reg.findall(text))
+            que.put([num, target, pattern, url, content])
         except wk.exceptions.DisambiguationError as e:
-            que.put([-1, "ambiguous", "fail", ""])
+            que.put([-1, "ambiguous", "fail", "", ""])
     for target in targets:
         thread = th.Thread(target=wrapper, args=(target, q1, pattern))
         threads.append(thread)
@@ -61,7 +69,8 @@ def apijson(request):
             'title': data[1],
             'amount': data[0],
             'pattern': data[2],
-            'url': data[3]
+            'url': data[3],
+            'content': data[4]
         })
     data = {
         "target": busq,
@@ -81,6 +90,7 @@ def api(request):
     uid = request.GET['uid']
     busq = request.GET['busq']
     pattern = request.GET['pattern']
+    local = request.GET['local']
     targets = wk.search(busq)
     threads = []
     q1 = queue.Queue()
@@ -88,11 +98,18 @@ def api(request):
         try:
             page = wk.page(target)
             text = page.content
-            reg = re.compile(pattern)
             url = page.url
-            que.put([len(reg.findall(text)), target, pattern, url])
+            content = ""
+            num = 0
+            if local:
+                content = page.content
+                num = 0
+            else:
+                reg = re.compile(pattern, re.IGNORECASE)
+                num = len(reg.findall(text))
+            que.put([num, target, pattern, url, content])
         except wk.exceptions.DisambiguationError as e:
-            que.put([-1, "ambiguous", "fail", ""])
+            que.put([-1, "ambiguous", "fail", "", ""])
     for target in targets:
         thread = th.Thread(target=wrapper, args=(target, q1, pattern))
         threads.append(thread)
@@ -105,7 +122,8 @@ def api(request):
             'title': data[1],
             'amount': data[0],
             'pattern': data[2],
-            'url': data[3]
+            'url': data[3],
+            'content': data[4]
         })
     data = {
         "target": busq,
