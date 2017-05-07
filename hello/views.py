@@ -39,7 +39,7 @@ def workData(request):
     uid = request.GET['uid']
     busq = request.GET['busq']
     pattern = request.GET['pattern']
-    local = request.GET['local']
+    local = request.GET['contenido']
     targets = wk.search(busq)
     threads = []
     q1 = queue.Queue()
@@ -83,8 +83,7 @@ def workData(request):
         "pattern": pattern,
         "reps": amounts
     }
-    middleware = middle.XsSharing()
-    return (data, middleware)
+    return data
 
 
 def api(request):
@@ -93,7 +92,8 @@ def api(request):
     :param request: peticion http
     :return: vista
     """
-    (data, middleware) = workData(request)
+    data = workData(request)
+    middleware = middle.XsSharing()
     response = middleware.process_response(request, render(request, 'amounts.html', data))
     return response
 
@@ -102,6 +102,7 @@ def apijson(request):
     :param request: peticion http
     :return: json con datos
     """
-    (data, middleware) = workData(request)
+    data = workData(request)
+    middleware = middle.XsSharing()
     response = middleware.process_response(request, JsonResponse(data))
     return response
