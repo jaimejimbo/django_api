@@ -7,9 +7,10 @@ from .models import Greeting
 import wikipedia as wk
 import threading as th
 import queue
-import re, json
-import scipy as sp
+import re#, json
+#import scipy as sp
 import middleware.middleware as middle
+#import numba
 
 
 # Create your views here.
@@ -30,6 +31,7 @@ def db(request):
 def prueba(request):
     return render(request, 'prueba.html')
 
+#@numba.jit(cache=True, nogil=True, nopython=True)
 def workData(request):
     """
     
@@ -40,7 +42,8 @@ def workData(request):
     busq = request.GET['busq']
     pattern = request.GET['pattern']
     local = request.GET['contenido']
-    targets = wk.search(busq)
+    results = request.GET['results']
+    targets = wk.search(busq, results=results)
     threads = []
     q1 = queue.Queue()
 
@@ -84,7 +87,6 @@ def workData(request):
         "reps": amounts
     }
     return data
-
 
 def api(request):
     """
