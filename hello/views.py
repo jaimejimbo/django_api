@@ -43,6 +43,8 @@ def workData(request):
     pattern = request.GET['pattern']
     local = request.GET['contenido']
     results = request.GET['results']
+    lang = request.GET['lang']
+    wk.set_lang = lang
     targets = wk.search(busq, results=results)
     threads = []
     q1 = queue.Queue()
